@@ -229,7 +229,8 @@ public class LaunchConfigurationHelper {
 					} else {
 						productInfo = new ProductInfo(productId, productVersion, productName);
 					}
-					P2Utils.createProfile(profileID, p2DataArea, bundles.values(), features, productInfo);
+					List<String> repoUris = configuration.getAttribute("repo.uris", List.of());
+					P2Utils.createProfile(profileID, p2DataArea, bundles.values(), features, repoUris, productInfo);
 				}
 				properties.setProperty("eclipse.p2.profile", profileID); //$NON-NLS-1$
 			}

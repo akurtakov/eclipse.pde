@@ -176,6 +176,8 @@ public class LaunchAction extends Action {
 		wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_VM_ARGUMENTS, getVMArguments(os, arch));
 		wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_PROGRAM_ARGUMENTS, getProgramArguments(os, arch));
 		wc.setAttribute(IJavaLaunchConfigurationConstants.ATTR_JRE_CONTAINER_PATH, getJREContainer(os));
+		List<String> repoUrls = Stream.of(fProduct.getRepositories()).map(r -> r.getURL()).toList();
+		wc.setAttribute("repo.uris", repoUrls);
 
 		Set<String> wsplugins = new HashSet<>();
 		Set<String> explugins = new HashSet<>();

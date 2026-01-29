@@ -69,7 +69,9 @@ import org.eclipse.equinox.p2.publisher.PublisherInfo;
 import org.eclipse.equinox.p2.publisher.PublisherResult;
 import org.eclipse.equinox.p2.publisher.eclipse.ProductAction;
 import org.eclipse.equinox.p2.query.QueryUtil;
+import org.eclipse.equinox.p2.repository.IRepository;
 import org.eclipse.equinox.p2.repository.IRepositoryReference;
+import org.eclipse.equinox.p2.repository.spi.RepositoryReference;
 import org.eclipse.equinox.simpleconfigurator.manipulator.SimpleConfiguratorManipulator;
 import org.eclipse.osgi.service.resolver.BundleDescription;
 import org.eclipse.osgi.service.resolver.BundleSpecification;
@@ -364,7 +366,7 @@ public class P2Utils {
 	 */
 	public static void createProfile(String profileID, File p2DataArea, Collection<List<IPluginModelBase>> bundles)
 			throws CoreException {
-		createProfile(profileID, p2DataArea, bundles, null, null);
+		createProfile(profileID, p2DataArea, bundles, null, null, null);
 	}
 
 	/**
@@ -393,6 +395,36 @@ public class P2Utils {
 	 */
 	public static void createProfile(String profileID, File p2DataArea, Collection<List<IPluginModelBase>> bundles,
 			Map<IFeature, Boolean> featureMap, ProductInfo productInfo) throws CoreException {
+		createProfile(profileID, p2DataArea, bundles, featureMap, null, productInfo);
+	}
+
+	/**
+	 * Generates a profile containing metadata for all of the bundles in the
+	 * provided collection. The profile will have the given profile ID and will
+	 * be persisted in the profile registry directory inside the given p2 data
+	 * area.
+	 *
+	 * @param profileID
+	 *            the ID to be used when creating the profile, if a profile with
+	 *            the same name exists, it will be overwritten
+	 * @param p2DataArea
+	 *            the directory which contains p2 data including the profile
+	 *            registry, if the directory path doesn't exist it will be
+	 *            created
+	 * @param bundles
+	 *            the collection of IPluginModelBase objects representing
+	 *            bundles to create metadata for and add to the profile
+	 * @param featureMap
+	 *            the map of IFeature objects representing features to create
+	 *            metadata for and add to the profile, if the mapping is true it
+	 *            is assumed a root feature
+	 *
+	 * @throws CoreException
+	 *             if the profile cannot be generated
+	 */
+	public static void createProfile(String profileID, File p2DataArea, Collection<List<IPluginModelBase>> bundles,
+			Map<IFeature, Boolean> featureMap, List<String> repositories, ProductInfo productInfo)
+			throws CoreException {
 		// Acquire the required p2 services, creating an agent in the target p2 metadata area
 		IProvisioningAgentProvider provider = PDECore.getDefault().acquireService(IProvisioningAgentProvider.class);
 		if (provider == null) {
@@ -434,6 +466,9 @@ public class P2Utils {
 
 		// Add the metadata to the profile
 		ProvisioningContext context = new ProvisioningContext(agent);
+		URI[] uris = repositories.stream().map(URI::create).toArray(URI[]::new);
+		context.setMetadataRepositories(uris);
+		context.setArtifactRepositories(uris);
 		IProvisioningPlan plan = engine.createPlan(profile, context);
 		for (final IInstallableUnit iu : ius) {
 			plan.addInstallableUnit(iu);
@@ -499,6 +534,20 @@ public class P2Utils {
 
 				@Override
 				public List<IRepositoryReference> getRepositoryEntries() {
+					if (repositories != null) {
+						List<IRepositoryReference> repoRefs = new ArrayList<>();
+						for (String uri : repositories) {
+							try {
+								repoRefs.add(new RepositoryReference(new URI(uri), "", IRepository.TYPE_ARTIFACT, //$NON-NLS-1$
+										IRepository.NONE));
+								repoRefs.add(new RepositoryReference(new URI(uri), "", IRepository.TYPE_METADATA, //$NON-NLS-1$
+										IRepository.NONE));
+							} catch (URISyntaxException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+							}
+						}
+					}
 					return List.of();
 				}
 
