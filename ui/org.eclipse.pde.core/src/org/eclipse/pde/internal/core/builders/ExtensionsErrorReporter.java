@@ -146,7 +146,7 @@ public class ExtensionsErrorReporter extends ManifestErrorReporter {
 				}
 			}
 
-			if (fModel != null) {
+			if (fModel != null && children.getLength() > 0) {
 			IExtensions extensions = fModel.getExtensions();
 			if (extensions != null && extensions.getExtensions().length == 0 && extensions.getExtensionPoints().length == 0) {
 				report(PDECoreMessages.Builders_Manifest_useless_file, -1, IMarker.SEVERITY_WARNING, PDEMarkerFactory.P_USELESS_FILE, PDEMarkerFactory.CAT_OTHER);

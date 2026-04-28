@@ -216,7 +216,9 @@ public abstract class XMLErrorReporter extends DefaultHandler {
 
 	@Override
 	public void endDocument() throws SAXException {
-		fXMLDocument.appendChild(fRootElement);
+		if (fRootElement != null) {
+			fXMLDocument.appendChild(fRootElement);
+		}
 	}
 
 	@Override
